@@ -12,7 +12,7 @@
 #define MAX_SPEED 300.0f
 #define MAX_FALL_SPEED 900.0f
 
-#define MAP_LENGTH 18
+#define MAP_LENGTH 25
 #define MAP_HEIGHT 13
 
 #define PLAYER_SIZE 48.0f
@@ -30,36 +30,41 @@ typedef struct Player
 
 
 void UpdatePlayer(Player *player, Rectangle *source, float delta, char map[MAP_HEIGHT][MAP_LENGTH]);
-void DrawMap(char map[MAP_HEIGHT][MAP_LENGTH], Texture2D tilemap);
+void DrawMap(char map[MAP_HEIGHT][MAP_LENGTH], Texture2D tilemap, Texture2D backgroundImg, float backgroundScroll);
+void MoveCamera(Camera2D *camera, Vector2 playerPosition);
 char GetTile(char map[MAP_HEIGHT][MAP_LENGTH], float x, float y, float cellSize);
+void UpdateParallax(float *backgroundScroll, Vector2 playerPosition, float playerSpeed, float delta, int screenWidth);
 
 int main(void)
 {
-
+    //--WINDOW--//
     const int screenWidth = 864;
     const int screenHeight = 624;
 
     InitWindow(screenWidth, screenHeight, "Smack Bruhdas - Demo");
 
-    Texture2D background = LoadTexture("resources/autumn_background.png");
+    //--MAP--//
+    Texture2D autumnBackgroundImg = LoadTexture("resources/autumn_background.png");
+    float autumnBackgroundScroll = 0.0f;
     Texture2D tileMap = LoadTexture("resources/tiles.png");
 
     char map[MAP_HEIGHT][MAP_LENGTH] = {
-        "..................",
-        ".........#*.......",
-        "..................",
-        ".........#......[]",
-        "*..#####..oo......",
-        "*..*###....**.....",
-        "............*o....",
-        ".............oo...",
-        "..................",
-        "................[]",
-        ".......#.#........",
-        ".......*o**.......",
-        "##################"
+        ".........................",
+        ".........#*.........[....",
+        ".........................",
+        ".........#......[].......",
+        "*..#####..oo.............",
+        "*..*###....**............",
+        "............*o...........",
+        ".............oo.....o....",
+        ".........................",
+        "........*.......[].......",
+        ".......#*#...............",
+        ".........................",
+        "#########################"
     };
 
+    //--PLAYER--//
     Player player = {0};
     player.position = (Vector2){ 400.0f, 400.0f };
 
@@ -67,6 +72,12 @@ int main(void)
     Rectangle robotSourceRec = { 0.0f, 0.0f, 16.0f, 16.0f };
     Vector2 robotSpriteOrigin = { 0.0f, 0.0f };
     float robotRotation = 0.0f;
+
+    //--CAMERA--//
+    Camera2D camera = {0};
+    camera.offset.x = screenWidth/2.0f - 48.0f;
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
 
     SetTargetFPS(60);
 
@@ -76,19 +87,23 @@ int main(void)
         float delta_time = GetFrameTime();
 
         UpdatePlayer(&player, &robotSourceRec, delta_time, map);
+        UpdateParallax(&autumnBackgroundScroll, player.position, player.hSpeed, delta_time, screenWidth);
+        MoveCamera(&camera, player.position);
 
         BeginDrawing();
 
-            ClearBackground(RAYWHITE);
-            DrawTextureEx(background, (Vector2){ 0.0f, 0.0f }, 0.0f, 3.0f, WHITE);
-            DrawMap(map, tileMap);
-            DrawTexturePro(robot, robotSourceRec, (Rectangle){ player.position.x, player.position.y, 48.0f, 48.0f}, robotSpriteOrigin, robotRotation, WHITE);
+            BeginMode2D(camera);
+                ClearBackground(RAYWHITE);
+                DrawMap(map, tileMap, autumnBackgroundImg, autumnBackgroundScroll);
+                DrawTexturePro(robot, robotSourceRec, (Rectangle){ player.position.x, player.position.y, 48.0f, 48.0f}, robotSpriteOrigin, robotRotation, WHITE);
+            EndMode2D();
+
         EndDrawing();
     }
 
     UnloadTexture(tileMap);
     UnloadTexture(robot);
-    UnloadTexture(background);
+    UnloadTexture(autumnBackgroundImg);
     
     CloseWindow();
 
@@ -215,7 +230,7 @@ void UpdatePlayer(Player *player, Rectangle *source, float delta, char map[MAP_H
     player->position.y = newPlayerPositionY;
 }
 
-void DrawMap(char map[MAP_HEIGHT][MAP_LENGTH], Texture2D tilemap)
+void DrawMap(char map[MAP_HEIGHT][MAP_LENGTH], Texture2D tilemap, Texture2D backgroundImg, float backgroundScroll)
 {
     Rectangle mapSourceRec = {0};
     mapSourceRec.width = 16.0f;
@@ -225,6 +240,8 @@ void DrawMap(char map[MAP_HEIGHT][MAP_LENGTH], Texture2D tilemap)
     mapDestinRec.width = 48.0f;
     mapDestinRec.height = 48.0f;
 
+    DrawTextureEx(backgroundImg, (Vector2){ backgroundScroll, 0.0f }, 0.0f, 3.0f, WHITE);
+    DrawTextureEx(backgroundImg, (Vector2){ backgroundImg.width*3 + backgroundScroll, 0.0f }, 0.0f, 3.0f, WHITE);
 
     for (int r = 0; r < MAP_HEIGHT; r++)
     {
@@ -287,4 +304,19 @@ char GetTile(char map[MAP_HEIGHT][MAP_LENGTH], float x, float y, float cellSize)
     int r = y/cellSize;
     if (t >= 0 && t < MAP_LENGTH && r >= 0 && r < MAP_HEIGHT) return map[r][t];
     else return '#';
+}
+
+void MoveCamera(Camera2D *camera, Vector2 playerPosition)
+{
+    if (playerPosition.x <= 384.0f) camera->target.x = 384.0f;
+    else if (playerPosition.x >= MAP_LENGTH*48.0f - 480.0f) camera->target.x = MAP_LENGTH*48.0f - 480.0f;
+    else camera->target.x = playerPosition.x;
+}
+
+void UpdateParallax(float *backgroundScroll, Vector2 playerPosition, float playerSpeed, float delta, int screenWidth)
+{
+    if (!(playerPosition.x <= 384.0f) && !(playerPosition.x >= MAP_LENGTH*48.0f - 480.0f))
+    {
+        *backgroundScroll += playerSpeed*0.2f*delta;
+    }
 }
