@@ -7,4 +7,4 @@ Based on [javidx9 video](https://youtu.be/oJvJZNyW_rw) about collision detection
 
 [Made with Raylib](https://www.raylib.com)
 
-![game image](https://github.com/Vini-SCandido/Game/blob/10f1235a886915654f35b6e0548cbfac4b873c32/2021-12-03_13-05-53_SparkVideo.gif?raw=true)
+![game image](https://github.com/Vini-SCandido/Game/blob/da5e3f0eecd7a89bea124c613ea02b832586722a/game.gif?raw=true)
