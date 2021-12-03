@@ -1,7 +1,7 @@
 # Game
 
 Simple platformer with tile-based collision detection.
-Based on [javidx9 video](https://youtu.be/oJvJZNyW_rw) about collision detection.
+Based on [javidx9's video](https://youtu.be/oJvJZNyW_rw) about collision detection.
 
 [Art by GrafxKid](https://grafxkid.itch.io), [Made with Raylib](https://www.raylib.com).
 
